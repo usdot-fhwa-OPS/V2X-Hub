@@ -100,6 +100,19 @@ namespace JSONMessageLoggerPlugin {
                 }
             }
             catch (const boost::exception &e) {
+                if (isTollMessage(msg)) {
+                    // A TAM, TUM or TUMack that isn't valid ASN.1: report it at WARN level, not as a plugin error.
+                    const auto *stdEx = dynamic_cast<const std::exception *>(&e);
+                    std::string warning = invalidTollMessageWarning(msg, stdEx ? stdEx->what() : boost::diagnostic_information(e));
+                    FILE_LOG(tmx::utils::logWARNING) << warning;
+                    tmx::messages::TmxEventLogMessage eventLogMsg;
+                    eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_warn);
+                    eventLogMsg.set_description(warning);
+                    BroadcastMessage(eventLogMsg, JSONMessageLoggerPlugin::GetName());
+                    _invalidTollMessages++;
+                    SetStatus<unsigned long>(_keyInvalidTollMessages, _invalidTollMessages);
+                    return;
+                }
                 std::string errorMessage = "Boost exception while logging message: " + boost::diagnostic_information(e);
                 FILE_LOG(tmx::utils::logERROR) << errorMessage;
                 tmx::messages::TmxEventLogMessage eventLogMsg;

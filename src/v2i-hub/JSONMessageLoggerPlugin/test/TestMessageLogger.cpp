@@ -9,6 +9,9 @@
 #include <boost/log/expressions.hpp>
 #include <boost/shared_ptr.hpp>
 #include <sstream> // Required for std::ostringstream
+#include <memory>
+#include <tuple>
+#include <vector>
 #include <MessageLogger.hpp>
 #include <boost/core/null_deleter.hpp>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
@@ -125,4 +128,55 @@ namespace JSONMessageLoggerPlugin {
         EXPECT_EQ(expectJson, jsonOnly);
     }
 
+#if SAEJ2735_SPEC >= 2024
+    // Tolling messages (J2735 2024 / SAE J3217): a Suntrax TAM and a TUM/TUMack with made-up values, plus sample TAMs
+    // (A, B), TUM and TUMack from another encoder. The cut versions are the first half of the same bytes (or, for
+    // TAM B, a sample truncated TAM), so not valid ASN.1.
+    static const std::vector<std::tuple<std::string, std::string, std::string, std::string>> TOLL_MESSAGES = {
+        // subtype, value name in the JSON, valid hex, cut hex
+        {"TAM", "TollAdvertisementMessage", "0025808e44000404101b62c20010221584060000005405cff7ea16a44000468000802333e4049d41f72f1461c05b8020008f06850a53e0c3905bd0000018ea1025c6333b9a018ea0fb97a333e40480400122a4f993105a9f3a292000000063a83ee5e8ccf901263a83ecbf8ccf9a4000000000000000000000000000000000000000000000000000000000000000009ab000", "0025808e44000404101b62c20010221584060000005405cff7ea16a44000468000802333e4049d41f72f1461c05b8020008f06850a53e0c3905bd0000018ea1025c6333b9a018ea0fb"},
+        {"TUM", "TollUsageMessage", "00262c0015017202040608040007c004488cd115599de2266aaef3377bbfc004488cd115599de2266aaef3377bbfc0", "00262c0015017202040608040007c004488cd115599de2"},
+        {"TUMack", "TollUsageAckMessage", "0027080001020304024c90", "0027080001"},
+        // Sample TAM A, TAM B (with the sample truncated TAM), TUM and TUMack
+        {"TAM", "TollAdvertisementMessage", "0025808e44000404101b62c20010221584060000005405cff7ea16a4400046800080266e880f9ea6f7d3940000fa0020008f06850a53e0c3905bd0000018f538148e66e84f018f537be9e66e880f80400122a4f993105a9f3a292000000063d4defa799ba203e63d4dea9499ba24f000000000000000000000000000000000000000000000000000000000000000009ab000", "0025808e44000404101b62c20010221584060000005405cff7ea16a4400046800080266e880f9ea6f7d3940000fa0020008f06850a53e0c3905bd0000018f538148e66e84f018f537b"},
+        {"TAM", "TollAdvertisementMessage", "0025808e4400040408110ac2002036c584060000005405c7f7ea16a4400046800080266e7ac833584f9c940000fa0020008f06850a53e0c3900000000018f537144e66e7c5818f537590e66e7ac800400122a4f993105a9f3a280080000063d4dd64399b9eb2063d4de2c399b9e99000000000000000000000000000000000000000000000000000000000000000009ab000", "0025808e4400040408110ac2002036c584060000005405c7f7ea16a4400046800080266e7ac833584f9c940000fa0020008f06850a53e0"},
+        {"TUM", "TollUsageMessage", "002640001501714b8528ba00000cc517fbf5451fcd4c8b48015074797e47e1db10d1ab6247c4dfe4b1b705066170e2c6c59334005e30a7041800005dc1000221584000", "002640001501714b8528ba00000cc517fbf5451fcd4c8b48015074797e47e1db10"},
+        {"TUMack", "TollUsageAckMessage", "00270800f9d88687004c90", "00270800f9"}
+    };
+
+    static std::unique_ptr<tmx::routeable_message> tollMessageFromHex(const std::string &hex) {
+        tmx::messages::J2735MessageFactory factory;
+        tmx::byte_stream bytes = tmx::byte_stream_decode(hex);
+        return std::unique_ptr<tmx::routeable_message>(factory.NewMessage(bytes));
+    }
+
+    TEST(TestMessageLogger, validTollMessagesLogAsJson) {
+        for (const auto &[subtype, valueName, hex, cutHex] : TOLL_MESSAGES) {
+            auto msg = tollMessageFromHex(hex);
+            ASSERT_NE(msg, nullptr) << subtype;
+            EXPECT_TRUE(isTollMessage(*msg)) << subtype;
+            std::string jsonStr = routeableMessageToJsonString(*msg);
+            EXPECT_NE(jsonStr.find("\"" + valueName + "\""), std::string::npos) << subtype << ": " << jsonStr;
+        }
+    }
+
+    TEST(TestMessageLogger, invalidTollMessagesFailWithWarningText) {
+        for (const auto &[subtype, valueName, hex, cutHex] : TOLL_MESSAGES) {
+            auto msg = tollMessageFromHex(cutHex);
+            ASSERT_NE(msg, nullptr) << subtype;
+            EXPECT_TRUE(isTollMessage(*msg)) << subtype;
+            // Not valid ASN.1: the conversion throws, and the plugin reports it at WARN level with this text.
+            EXPECT_ANY_THROW(routeableMessageToJsonString(*msg)) << subtype;
+            std::string warning = invalidTollMessageWarning(*msg, "test reason");
+            EXPECT_EQ(warning.rfind("Invalid " + subtype + " message (ASN.1 UPER decoding failed: test reason). Payload: ", 0), 0u) << warning;
+            EXPECT_NE(warning.find(cutHex), std::string::npos) << warning;
+        }
+    }
+#endif
+
+    TEST(TestMessageLogger, otherMessagesAreNotTollMessages) {
+        tmx::messages::BsmEncodedMessage bsm;
+        tmx::routeable_message *rMsg = dynamic_cast<tmx::routeable_message *>(&bsm);
+        EXPECT_FALSE(isTollMessage(*rMsg));
+    }
 }

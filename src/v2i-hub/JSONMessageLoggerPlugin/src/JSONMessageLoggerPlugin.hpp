@@ -55,6 +55,8 @@ namespace JSONMessageLoggerPlugin {
             boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string> txLogger;
             unsigned long _skippedMessages = 0;
             const char* _keySkippedMessages = "Skipped Messages";
+            unsigned long _invalidTollMessages = 0;
+            const char* _keyInvalidTollMessages = "Invalid TAM/TUM/TUMack Messages";
 
 
     };
