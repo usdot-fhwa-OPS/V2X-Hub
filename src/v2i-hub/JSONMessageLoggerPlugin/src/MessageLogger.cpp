@@ -29,14 +29,7 @@ namespace JSONMessageLoggerPlugin{
         }
     }
 
-    bool isTollMessage(tmx::routeable_message& msg) {
-        std::string subtype = msg.get_subtype();
-        return subtype == tmx::messages::api::MSGSUBTYPE_TOLLADVERTISEMENTMESSAGE_STRING
-            || subtype == tmx::messages::api::MSGSUBTYPE_TOLLUSAGEMESSAGE_STRING
-            || subtype == tmx::messages::api::MSGSUBTYPE_TOLLUSAGEACKMESSAGE_STRING;
-    }
-
-    std::string invalidTollMessageWarning(tmx::routeable_message& msg, const std::string& reason) {
+    std::string invalidMessageWarning(tmx::routeable_message& msg, const std::string& reason) {
         return "Invalid " + msg.get_subtype() + " message (ASN.1 UPER decoding failed: " + reason + "). Payload: "
             + msg.get_payload_str();
     }

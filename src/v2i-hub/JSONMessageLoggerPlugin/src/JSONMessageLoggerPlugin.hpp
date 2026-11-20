@@ -27,6 +27,8 @@
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/sources/severity_channel_logger.hpp> // For severity channel logger
 #include <string>
+#include <map>
+#include <mutex>
 #include "MessageLogger.hpp"
 
 namespace JSONMessageLoggerPlugin {
@@ -55,8 +57,9 @@ namespace JSONMessageLoggerPlugin {
             boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string> txLogger;
             unsigned long _skippedMessages = 0;
             const char* _keySkippedMessages = "Skipped Messages";
-            unsigned long _invalidTollMessages = 0;
-            const char* _keyInvalidTollMessages = "Invalid TAM/TUM/TUMack Messages";
+            // Count of messages that failed ASN.1 decoding, by message type (e.g. "TAM"), shown as "Invalid <type> Messages"
+            std::map<std::string, unsigned long> _invalidMessages;
+            std::mutex _invalidMessagesLock;
 
 
     };
