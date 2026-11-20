@@ -1,4 +1,4 @@
-project( TimPlugin VERSION 8.0.0 LANGUAGES CXX )
+project( TimPlugin VERSION 8.1.0 LANGUAGES CXX )
 
 set(TMX_PLUGIN_NAME "TIM")
 # Required for QT libraries

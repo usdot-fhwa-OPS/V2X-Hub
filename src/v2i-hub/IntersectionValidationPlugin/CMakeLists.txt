@@ -1,4 +1,4 @@
-PROJECT ( IntersectionValidationPlugin VERSION 8.0.0 LANGUAGES CXX )
+PROJECT ( IntersectionValidationPlugin VERSION 8.1.0 LANGUAGES CXX )
 
 SET (TMX_PLUGIN_NAME "Intersection Validation")
 
