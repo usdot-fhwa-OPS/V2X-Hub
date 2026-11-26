@@ -32,6 +32,12 @@ The V2X Hub system reduces time needed to create and deploy a roadside based V2X
 * CARMA Cloud Plugin – An interface between V2X Hub and CARMA Cloud
 * CDASim Adapter Plugin – An interface between V2X Hub and CDASim for simulation testing 
 * RSU Health Monitoring Plugin – A plugin used to monitor RSU health via RSU 4.1 specification or NTCIP 1218
+* Command Plugin – Listens for websocket connections from the TMX admin portal and processes commands from the Administration Portal
+* ERV Cloud Forwarding Plugin – Forwards BSMs broadcast by Emergency Response Vehicles (ERVs) to CARMA Cloud over a websocket connection
+* Intersection Validation Plugin – Validates MAP and SPaT messages received from RSUs against the CTI 4501 standard
+* MUST Sensor Driver Plugin – Consumes detections from an AI Waysion MUST camera sensor and translates them into Sensor Detected Object messages for cooperative perception
+* Port Drayage Plugin – Facilitates communication between infrastructure, vehicles, and container handling equipment (CHE) for automated port drayage operations
+* Priority Plugin – Handles J2735 Signal Request Messages (SRMs) and places priority requests against a Traffic Signal Controller (TSC) per NTCIP 1211
 
 V2X Hub is a communication, computation, and processing platform for V2I applications, and providing the functions listed below.
 
